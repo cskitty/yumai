@@ -1,9 +1,20 @@
-const GEMINI_MODEL_NAME = "gemini-2.5-flash-preview-04-17";
+// Use the correct Gemini model name
+const GEMINI_MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
 
-async function fetchWithRetry(url, options, maxRetries = 3) {
+async function fetchWithRetry(url, options, maxRetries = 2) {
   for (let i = 0; i < maxRetries; i++) {
     try {
-      const response = await fetch(url, options);
+      // Add timeout to prevent Vercel function from hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
       if (response.ok) return response;
       if (response.status === 429 && i < maxRetries - 1) {
         await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
@@ -11,6 +22,9 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
       }
       return response;
     } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout - AI analysis took too long');
+      }
       if (i === maxRetries - 1) throw error;
       await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
     }
@@ -41,6 +55,13 @@ export default async function handler(req, res) {
 
     if (!fileContent) {
       return res.status(400).json({ error: 'Missing file content' });
+    }
+
+    // Limit content size to prevent timeout
+    const contentToAnalyze = fileContent.substring(0, 6000);
+
+    if (contentToAnalyze.length < 100) {
+      return res.status(400).json({ error: 'Content too short to analyze' });
     }
 
     const analysisPrompt = `
@@ -95,7 +116,7 @@ export default async function handler(req, res) {
 
       网页内容:
       ---
-      ${fileContent.substring(0, 8000)}
+      ${contentToAnalyze}
       ---
     `;
 
@@ -117,21 +138,38 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      return res.status(response.status).json({ error: data.error?.message || 'API request failed' });
+      console.error('Gemini API error:', data);
+      return res.status(response.status).json({
+        error: data.error?.message || 'API request failed',
+        details: data.error
+      });
     }
 
     const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!textResponse) {
+      console.error('No text response from Gemini:', data);
       return res.status(500).json({ error: 'AI未能成功分析内容' });
     }
 
-    const parsedTemplate = JSON.parse(textResponse);
+    let parsedTemplate;
+    try {
+      parsedTemplate = JSON.parse(textResponse);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError, 'Response:', textResponse);
+      return res.status(500).json({
+        error: 'AI返回的内容格式错误',
+        rawResponse: textResponse.substring(0, 200)
+      });
+    }
 
     return res.status(200).json({ template: parsedTemplate });
 
   } catch (error) {
-    console.error('Analyze template error:', error);
-    return res.status(500).json({ error: error.message });
+    console.error('Analyze template error:', error.name, error.message, error.stack);
+    return res.status(500).json({
+      error: error.message || 'Server error',
+      type: error.name
+    });
   }
 }
