@@ -572,39 +572,27 @@ export default function H5Generator() {
       setIsLoading(true);
       setMessages(prev => [...prev, { role: 'system', content: `正在获取网页内容: ${templateUrl}...` }]);
 
-      // Fetch URL directly from client-side (bypasses server timeout issues)
-      let htmlContent;
-      try {
-        const response = await fetch(templateUrl, {
-          mode: 'cors',
-          headers: {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          }
-        });
+      // Use server-side proxy to bypass CORS
+      const proxyUrl = `/api/fetch-url?url=${encodeURIComponent(templateUrl)}`;
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+      const response = await fetch(proxyUrl);
+      const text = await response.text();
 
-        htmlContent = await response.text();
+      if (!response.ok) {
+        // Server returned an error message
+        throw new Error(text || `HTTP ${response.status}: ${response.statusText}`);
+      }
 
-        if (!htmlContent || htmlContent.length < 100) {
-          throw new Error('获取的内容为空或太短');
-        }
-      } catch (fetchError) {
-        // If direct fetch fails (CORS), provide helpful error message
-        if (fetchError.message.includes('CORS') || fetchError.name === 'TypeError') {
-          throw new Error('无法直接访问该网页（CORS限制）。\n\n解决方案：\n1. 在浏览器中打开该网页\n2. 右键 → "另存为" → 保存为 .html 文件\n3. 使用下方的"上传 HTML 文件分析"按钮上传');
-        }
-        throw fetchError;
+      if (!text || text.length < 100) {
+        throw new Error('获取的内容为空或太短');
       }
 
       // Send the fetched content to server for AI analysis
-      await analyzeWebpageAsTemplate(templateUrl, htmlContent);
+      await analyzeWebpageAsTemplate(templateUrl, text);
       setTemplateUrl('');
     } catch (error) {
       console.error("URL Analysis Error:", error);
-      setMessages(prev => [...prev, { role: 'error', content: `无法分析网页。错误: ${error.message}` }]);
+      setMessages(prev => [...prev, { role: 'error', content: `无法分析网页。\n\n${error.message}` }]);
     } finally {
       setIsLoading(false);
     }

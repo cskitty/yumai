@@ -57,12 +57,36 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing file content' });
     }
 
+    // Clean HTML: remove scripts, styles, and extract main content
+    let cleanedContent = fileContent
+      // Remove script tags and their content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      // Remove style tags and their content
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+      // Remove HTML comments
+      .replace(/<!--[\s\S]*?-->/g, '')
+      // Remove inline styles
+      .replace(/\s*style\s*=\s*["'][^"']*["']/gi, '')
+      // Remove class attributes (often just noise for layout)
+      .replace(/\s*class\s*=\s*["'][^"']*["']/gi, '')
+      // Decode HTML entities
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      // Remove extra whitespace
+      .replace(/\s+/g, ' ')
+      .trim();
+
     // Limit content size to prevent timeout
-    const contentToAnalyze = fileContent.substring(0, 6000);
+    const contentToAnalyze = cleanedContent.substring(0, 8000); // Increased to 8000 since we cleaned it
 
     if (contentToAnalyze.length < 100) {
-      return res.status(400).json({ error: 'Content too short to analyze' });
+      return res.status(400).json({ error: 'Content too short to analyze after cleaning' });
     }
+
+    console.log(`Analyzing content: ${contentToAnalyze.length} characters (cleaned from ${fileContent.length})`);
 
     const analysisPrompt = `
       分析以下微信公众号文章的版式和设计风格。请识别：
