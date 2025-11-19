@@ -1,4 +1,4 @@
-const GEMINI_MODEL_NAME = "gemini-2.5-flash-preview-05-20";
+const GEMINI_MODEL_NAME = "gemini-1.5-flash";
 
 async function fetchWithRetry(url, options, maxRetries = 3) {
   for (let i = 0; i < maxRetries; i++) {
