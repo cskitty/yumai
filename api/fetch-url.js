@@ -45,6 +45,12 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       console.error(`Fetch failed: ${response.status} ${response.statusText}`);
+
+      // Special handling for WeChat authentication errors
+      if (response.status === 401 && targetUrl.hostname.includes('weixin.qq.com')) {
+        return res.status(401).send('微信文章需要登录才能访问。请在浏览器中打开文章，右键"另存为"保存HTML文件，然后上传文件进行分析。');
+      }
+
       return res.status(response.status).send(`Failed to fetch URL: ${response.statusText}`);
     }
 
