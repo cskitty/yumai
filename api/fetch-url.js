@@ -1,0 +1,54 @@
+export default async function handler(req, res) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).send('URL parameter is required');
+  }
+
+  try {
+    // Validate URL
+    const targetUrl = new URL(url);
+
+    // Fetch the URL content
+    const response = await fetch(targetUrl.toString(), {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      },
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).send(`Failed to fetch URL: ${response.statusText}`);
+    }
+
+    const contentType = response.headers.get('content-type');
+    const text = await response.text();
+
+    // Set appropriate content type
+    if (contentType) {
+      res.setHeader('Content-Type', contentType);
+    } else {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    }
+
+    return res.status(200).send(text);
+
+  } catch (error) {
+    console.error('Fetch URL error:', error);
+    return res.status(500).send(`Error fetching URL: ${error.message}`);
+  }
+}
