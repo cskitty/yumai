@@ -19,19 +19,32 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Validate URL
-    const targetUrl = new URL(url);
+    // Decode and validate URL
+    const decodedUrl = decodeURIComponent(url);
+    const targetUrl = new URL(decodedUrl);
+
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     // Fetch the URL content
     const response = await fetch(targetUrl.toString(), {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
       },
+      signal: controller.signal,
+      redirect: 'follow',
     });
 
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
+      console.error(`Fetch failed: ${response.status} ${response.statusText}`);
       return res.status(response.status).send(`Failed to fetch URL: ${response.statusText}`);
     }
 
@@ -48,7 +61,12 @@ export default async function handler(req, res) {
     return res.status(200).send(text);
 
   } catch (error) {
-    console.error('Fetch URL error:', error);
+    console.error('Fetch URL error:', error.name, error.message);
+
+    if (error.name === 'AbortError') {
+      return res.status(504).send('Request timeout - the URL took too long to respond');
+    }
+
     return res.status(500).send(`Error fetching URL: ${error.message}`);
   }
 }
