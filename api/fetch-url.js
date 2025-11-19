@@ -23,6 +23,11 @@ export default async function handler(req, res) {
     const decodedUrl = decodeURIComponent(url);
     const targetUrl = new URL(decodedUrl);
 
+    // Special handling for WeChat articles - they often require authentication
+    if (targetUrl.hostname.includes('weixin.qq.com') || targetUrl.hostname.includes('mp.weixin.qq.com')) {
+      return res.status(403).send('微信公众号文章通常需要登录访问，无法直接抓取。\n\n解决方案：\n1. 在浏览器中打开该文章\n2. 右键点击页面 → "另存为" → 保存为 .html 文件\n3. 在"模板库"中点击上传按钮，上传保存的 HTML 文件\n\n这样可以完整保留文章的样式和布局。');
+    }
+
     // Create AbortController for timeout
     // Vercel Hobby plan has 10s limit, so we must abort before that to return a proper error
     const controller = new AbortController();

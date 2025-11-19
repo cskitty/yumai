@@ -126,8 +126,8 @@ const ArticleSection = ({ data, isFirst }) => {
             const textStyle = el.style === 'highlight'
               ? 'bg-yellow-50 border-l-4 border-yellow-400 pl-4 py-2 italic'
               : el.style === 'quote'
-              ? 'border-l-4 pl-4 py-2 italic text-slate-500'
-              : '';
+                ? 'border-l-4 pl-4 py-2 italic text-slate-500'
+                : '';
             return (
               <p key={idx} className={`text-base leading-relaxed text-slate-600 mb-4 ${textStyle}`} style={{ borderColor: el.style === 'quote' ? theme.primaryColor : undefined }}>
                 {el.content}
@@ -1222,6 +1222,27 @@ export default function H5Generator() {
                   </button>
                 </div>
                 <p className="text-xs text-slate-400 mt-2">输入任意网页链接，AI 将自动提取设计风格</p>
+
+                {/* File Upload Option */}
+                <div className="mt-4 pt-4 border-t border-slate-200">
+                  <p className="text-xs text-slate-500 mb-2">💡 微信公众号文章无法直接抓取，请上传 HTML 文件：</p>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept=".html,.htm"
+                      onChange={(e) => handleDocumentUpload(e, 'template')}
+                      className="hidden"
+                      id="template-file-upload"
+                    />
+                    <label
+                      htmlFor="template-file-upload"
+                      className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 hover:border-emerald-500 hover:text-emerald-600 transition-colors cursor-pointer"
+                    >
+                      <Upload className="w-4 h-4" />
+                      上传 HTML 文件分析
+                    </label>
+                  </div>
+                </div>
               </div>
 
               {/* Templates Grid */}
@@ -1425,366 +1446,364 @@ export default function H5Generator() {
           </div>
         </div>
 
-    {/* Floating Action Buttons (Desktop Context) - Hide in view mode */}
-    {!isViewMode && (
-      <div className="absolute top-8 right-8 flex flex-col gap-3 z-50">
-        {/* Publish Button */}
-        <button
-          onClick={() => {
-            console.log('Publish clicked', { isPublishing, slidesLength: slides.length, isPublished });
-            handlePublish();
-          }}
-          disabled={isPublishing || slides.length === 0 || isPublished}
-          className={`p-3 rounded-full shadow-lg transition-colors cursor-pointer ${
-            isPublished
-              ? 'bg-green-500 text-white'
-              : isPublishing || slides.length === 0
-              ? 'bg-slate-400 text-slate-200 cursor-not-allowed'
-              : 'bg-emerald-600 text-white hover:bg-emerald-500 active:scale-95'
-          }`}
-          title={isPublished ? '已发布' : '发布文章'}
-        >
-          {isPublishing ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : isPublished ? (
-            <Check className="w-5 h-5" />
-          ) : (
-            <Globe className="w-5 h-5" />
-          )}
-        </button>
-
-        {/* Share Button */}
-        <button
-          onClick={openShareModal}
-          disabled={!isPublished}
-          className={`p-3 rounded-full shadow-lg transition-colors ${
-            isPublished
-              ? 'bg-blue-600 text-white hover:bg-blue-500'
-              : 'bg-slate-400 text-slate-200 cursor-not-allowed'
-          }`}
-          title={isPublished ? '分享文章' : '请先发布'}
-        >
-          <Share2 className="w-5 h-5" />
-        </button>
-
-        {/* Download Button */}
-        <button
-          onClick={() => {
-            const dataStr = JSON.stringify(slides, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'h5-article.json';
-            a.click();
-            URL.revokeObjectURL(url);
-          }}
-          className="p-3 bg-slate-800 text-slate-300 rounded-full shadow-lg hover:bg-slate-700 transition-colors"
-          title="下载 JSON"
-        >
-          <Save className="w-5 h-5" />
-        </button>
-      </div>
-    )}
-
-  </div>
-
-  {/* Publish Modal */}
-  {showPublishModal && (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Share2 className="w-5 h-5 text-emerald-500" />
-            发布成功
-          </h3>
-          <button
-            onClick={() => setShowPublishModal(false)}
-            className="p-1 hover:bg-slate-100 rounded-full transition-colors"
-          >
-            <X className="w-5 h-5 text-slate-500" />
-          </button>
-        </div>
-
-        {/* Article Title */}
-        <div className="mb-4">
-          <h4 className="font-medium text-slate-800 truncate">{articleTitle || '未命名文章'}</h4>
-        </div>
-
-        {/* URL Display */}
-        <div className="bg-slate-50 rounded-xl p-3 mb-4 break-all">
-          <code className="text-sm text-slate-700">{publishedUrl}</code>
-        </div>
-
-        {/* Social Share Buttons */}
-        <div className="mb-4">
-          <p className="text-sm text-slate-500 mb-3">分享到社交平台：</p>
-          <div className="flex gap-3 justify-center">
-            {/* WeChat */}
+        {/* Floating Action Buttons (Desktop Context) - Hide in view mode */}
+        {!isViewMode && (
+          <div className="absolute top-8 right-8 flex flex-col gap-3 z-50">
+            {/* Publish Button */}
             <button
-              onClick={shareToWeChat}
-              className="w-12 h-12 bg-green-500 text-white rounded-xl flex items-center justify-center hover:bg-green-600 transition-colors shadow-md"
-              title="微信"
+              onClick={() => {
+                console.log('Publish clicked', { isPublishing, slidesLength: slides.length, isPublished });
+                handlePublish();
+              }}
+              disabled={isPublishing || slides.length === 0 || isPublished}
+              className={`p-3 rounded-full shadow-lg transition-colors cursor-pointer ${isPublished
+                  ? 'bg-green-500 text-white'
+                  : isPublishing || slides.length === 0
+                    ? 'bg-slate-400 text-slate-200 cursor-not-allowed'
+                    : 'bg-emerald-600 text-white hover:bg-emerald-500 active:scale-95'
+                }`}
+              title={isPublished ? '已发布' : '发布文章'}
             >
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.89c-.135-.01-.27-.027-.407-.03zm-2.53 3.274c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z"/>
-              </svg>
+              {isPublishing ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : isPublished ? (
+                <Check className="w-5 h-5" />
+              ) : (
+                <Globe className="w-5 h-5" />
+              )}
             </button>
 
-            {/* Weibo */}
+            {/* Share Button */}
             <button
-              onClick={() => shareToWeibo(publishedUrl, articleTitle)}
-              className="w-12 h-12 bg-red-500 text-white rounded-xl flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
-              title="微博"
+              onClick={openShareModal}
+              disabled={!isPublished}
+              className={`p-3 rounded-full shadow-lg transition-colors ${isPublished
+                  ? 'bg-blue-600 text-white hover:bg-blue-500'
+                  : 'bg-slate-400 text-slate-200 cursor-not-allowed'
+                }`}
+              title={isPublished ? '分享文章' : '请先发布'}
             >
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443zM9.05 17.219c-.384.616-1.208.884-1.829.602-.612-.279-.793-.991-.406-1.593.379-.595 1.176-.861 1.793-.601.622.263.82.972.442 1.592zm1.27-1.627c-.141.237-.449.353-.689.253-.236-.09-.313-.361-.177-.586.138-.227.436-.346.672-.24.239.09.315.36.18.573h.014zm.176-2.719c-1.893-.493-4.033.45-4.857 2.118-.836 1.704-.026 3.591 1.886 4.21 1.983.64 4.318-.341 5.132-2.179.8-1.793-.201-3.642-2.161-4.149zm7.563-1.224c-.346-.105-.579-.18-.405-.649.381-1.03.422-1.92.001-2.555-.789-1.187-2.945-1.121-5.391-.034 0 0-.772.332-.574-.271.381-1.2.324-2.203-.27-2.784-1.35-1.319-4.932.049-8.005 3.058C1.149 10.653 0 12.956 0 14.926c0 3.78 4.841 6.08 9.578 6.08 6.202 0 10.328-3.603 10.328-6.463 0-1.728-1.456-2.706-2.749-3.116-.019-.002-.038-.015-.072-.028zm3.109-2.82c-.674-.73-1.666-1.024-2.59-.943l.01.001c-.254.026-.444.253-.42.508.025.253.25.444.504.42h.001c.617-.055 1.282.141 1.735.598.455.458.659 1.107.615 1.737-.024.253.163.48.417.508.25.026.48-.161.506-.413.068-.924-.234-1.887-.778-2.416zm.965-2.166c-1.139-1.237-2.812-1.736-4.375-1.598-.256.022-.447.247-.427.504.023.253.248.448.503.427 1.262-.11 2.607.293 3.523 1.287.918.995 1.257 2.349 1.064 3.601-.038.254.135.491.387.533.252.038.49-.134.531-.387.24-1.561-.175-3.132-1.206-4.367z"/>
-              </svg>
+              <Share2 className="w-5 h-5" />
             </button>
 
-            {/* Twitter/X */}
+            {/* Download Button */}
             <button
-              onClick={() => shareToTwitter(publishedUrl, articleTitle)}
-              className="w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center hover:bg-gray-800 transition-colors shadow-md"
-              title="Twitter/X"
+              onClick={() => {
+                const dataStr = JSON.stringify(slides, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'h5-article.json';
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="p-3 bg-slate-800 text-slate-300 rounded-full shadow-lg hover:bg-slate-700 transition-colors"
+              title="下载 JSON"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-              </svg>
-            </button>
-
-            {/* Facebook */}
-            <button
-              onClick={() => shareToFacebook(publishedUrl)}
-              className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-700 transition-colors shadow-md"
-              title="Facebook"
-            >
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
+              <Save className="w-5 h-5" />
             </button>
           </div>
-        </div>
+        )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-3">
-          <button
-            onClick={() => copyToClipboard(publishedUrl)}
-            className="flex-1 bg-emerald-500 text-white font-medium py-2 px-4 rounded-xl hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-            复制链接
-          </button>
-          <button
-            onClick={() => window.open(publishedUrl, '_blank')}
-            className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors"
-          >
-            预览
-          </button>
-          <button
-            onClick={() => setShowPublishModal(false)}
-            className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors"
-          >
-            关闭
-          </button>
-        </div>
       </div>
-    </div>
-  )}
 
-  {/* Template Preview Modal */}
-  {previewTemplate && (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="p-3 border-b border-slate-100 flex justify-between items-center">
-          <span className="text-sm font-medium text-slate-700">{previewTemplate.templateName}</span>
-          <button
-            onClick={() => setPreviewTemplate(null)}
-            className="p-1 hover:bg-slate-100 rounded-full transition-colors"
-          >
-            <X className="w-4 h-4 text-slate-400" />
-          </button>
-        </div>
-
-        {/* Layout Preview - Phone mockup */}
-        <div className="p-4 bg-slate-100">
-          <div
-            className="w-full aspect-[9/16] rounded-xl overflow-hidden shadow-lg"
-            style={{ backgroundColor: previewTemplate.styleAnalysis?.secondaryColor || '#f8fafc' }}
-          >
-            {/* Cover Section */}
-            <div
-              className="h-1/3 p-3 flex flex-col justify-end"
-              style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor || '#1e40af' }}
-            >
-              <div className="w-2/3 h-2 bg-white/80 rounded mb-1" />
-              <div className="w-1/2 h-1.5 bg-white/50 rounded" />
+      {/* Publish Modal */}
+      {showPublishModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Share2 className="w-5 h-5 text-emerald-500" />
+                发布成功
+              </h3>
+              <button
+                onClick={() => setShowPublishModal(false)}
+                className="p-1 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
             </div>
 
-            {/* Content Section */}
-            <div className="p-3 space-y-2">
-              {/* Image placeholder */}
-              <div
-                className="w-full h-12 rounded flex items-center justify-center"
-                style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor + '20' || '#1e40af20' }}
-              >
-                <ImageIcon className="w-4 h-4" style={{ color: previewTemplate.styleAnalysis?.primaryColor || '#1e40af' }} />
-              </div>
-
-              {/* Text lines */}
-              <div className="space-y-1">
-                <div
-                  className="w-full h-1.5 rounded"
-                  style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor + '40' || '#1e40af40' }}
-                />
-                <div
-                  className="w-4/5 h-1.5 rounded"
-                  style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor + '30' || '#1e40af30' }}
-                />
-                <div
-                  className="w-3/5 h-1.5 rounded"
-                  style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor + '20' || '#1e40af20' }}
-                />
-              </div>
-
-              {/* Another image */}
-              <div
-                className="w-full h-10 rounded flex items-center justify-center"
-                style={{ backgroundColor: previewTemplate.styleAnalysis?.accentColor + '20' || '#f59e0b20' }}
-              >
-                <ImageIcon className="w-3 h-3" style={{ color: previewTemplate.styleAnalysis?.accentColor || '#f59e0b' }} />
-              </div>
-
-              {/* More text */}
-              <div className="space-y-1">
-                <div
-                  className="w-full h-1.5 rounded"
-                  style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor + '30' || '#1e40af30' }}
-                />
-                <div
-                  className="w-2/3 h-1.5 rounded"
-                  style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor + '20' || '#1e40af20' }}
-                />
-              </div>
-
-              {/* CTA Button */}
-              <div
-                className="w-full h-6 rounded"
-                style={{ backgroundColor: previewTemplate.styleAnalysis?.accentColor || '#f59e0b' }}
-              />
+            {/* Article Title */}
+            <div className="mb-4">
+              <h4 className="font-medium text-slate-800 truncate">{articleTitle || '未命名文章'}</h4>
             </div>
-          </div>
-        </div>
 
-        {/* Actions */}
-        <div className="p-3 border-t border-slate-100 flex gap-2">
-          <button
-            onClick={() => {
-              setActiveTemplate(previewTemplate);
-              setPreviewTemplate(null);
-              setActiveTab('chat');
-              setMessages(prev => [...prev, { role: 'system', content: `已选择模板 "${previewTemplate.templateName}"` }]);
-            }}
-            className="flex-1 py-2 px-3 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors"
-          >
-            使用模板
-          </button>
-          <button
-            onClick={() => setPreviewTemplate(null)}
-            className="py-2 px-3 bg-slate-100 text-slate-600 rounded-lg text-sm hover:bg-slate-200 transition-colors"
-          >
-            关闭
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
+            {/* URL Display */}
+            <div className="bg-slate-50 rounded-xl p-3 mb-4 break-all">
+              <code className="text-sm text-slate-700">{publishedUrl}</code>
+            </div>
 
-  {/* Login Modal */}
-  {showLogin && (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <User className="w-5 h-5 text-emerald-500" />
-            登录
-          </h3>
-          <button
-            onClick={() => {
-              setShowLogin(false);
-              setLoginEmail('');
-              setLoginOtp('');
-              setOtpSent(false);
-              setLoginError('');
-            }}
-            className="p-1 hover:bg-slate-100 rounded-full transition-colors"
-          >
-            <X className="w-5 h-5 text-slate-500" />
-          </button>
-        </div>
+            {/* Social Share Buttons */}
+            <div className="mb-4">
+              <p className="text-sm text-slate-500 mb-3">分享到社交平台：</p>
+              <div className="flex gap-3 justify-center">
+                {/* WeChat */}
+                <button
+                  onClick={shareToWeChat}
+                  className="w-12 h-12 bg-green-500 text-white rounded-xl flex items-center justify-center hover:bg-green-600 transition-colors shadow-md"
+                  title="微信"
+                >
+                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.89c-.135-.01-.27-.027-.407-.03zm-2.53 3.274c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z" />
+                  </svg>
+                </button>
 
-        {!otpSent ? (
-          <>
-            <p className="text-slate-600 mb-4">请输入您的邮箱地址，我们将发送验证码：</p>
-            <input
-              type="email"
-              value={loginEmail}
-              onChange={(e) => setLoginEmail(e.target.value)}
-              placeholder="your@email.com"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-emerald-500 transition-colors mb-4"
-              onKeyDown={(e) => e.key === 'Enter' && sendOtp()}
-            />
-            {loginError && <p className="text-red-500 text-sm mb-4">{loginError}</p>}
-            <button
-              onClick={sendOtp}
-              className="w-full bg-emerald-500 text-white font-medium py-3 px-4 rounded-xl hover:bg-emerald-600 transition-colors"
-            >
-              发送验证码
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="text-slate-600 mb-4">验证码已发送至 <strong>{loginEmail}</strong></p>
-            <input
-              type="text"
-              value={loginOtp}
-              onChange={(e) => setLoginOtp(e.target.value)}
-              placeholder="输入6位验证码"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-emerald-500 transition-colors mb-4 text-center text-lg tracking-widest"
-              maxLength={6}
-              onKeyDown={(e) => e.key === 'Enter' && verifyOtp()}
-            />
-            {loginError && <p className="text-red-500 text-sm mb-4">{loginError}</p>}
+                {/* Weibo */}
+                <button
+                  onClick={() => shareToWeibo(publishedUrl, articleTitle)}
+                  className="w-12 h-12 bg-red-500 text-white rounded-xl flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
+                  title="微博"
+                >
+                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443zM9.05 17.219c-.384.616-1.208.884-1.829.602-.612-.279-.793-.991-.406-1.593.379-.595 1.176-.861 1.793-.601.622.263.82.972.442 1.592zm1.27-1.627c-.141.237-.449.353-.689.253-.236-.09-.313-.361-.177-.586.138-.227.436-.346.672-.24.239.09.315.36.18.573h.014zm.176-2.719c-1.893-.493-4.033.45-4.857 2.118-.836 1.704-.026 3.591 1.886 4.21 1.983.64 4.318-.341 5.132-2.179.8-1.793-.201-3.642-2.161-4.149zm7.563-1.224c-.346-.105-.579-.18-.405-.649.381-1.03.422-1.92.001-2.555-.789-1.187-2.945-1.121-5.391-.034 0 0-.772.332-.574-.271.381-1.2.324-2.203-.27-2.784-1.35-1.319-4.932.049-8.005 3.058C1.149 10.653 0 12.956 0 14.926c0 3.78 4.841 6.08 9.578 6.08 6.202 0 10.328-3.603 10.328-6.463 0-1.728-1.456-2.706-2.749-3.116-.019-.002-.038-.015-.072-.028zm3.109-2.82c-.674-.73-1.666-1.024-2.59-.943l.01.001c-.254.026-.444.253-.42.508.025.253.25.444.504.42h.001c.617-.055 1.282.141 1.735.598.455.458.659 1.107.615 1.737-.024.253.163.48.417.508.25.026.48-.161.506-.413.068-.924-.234-1.887-.778-2.416zm.965-2.166c-1.139-1.237-2.812-1.736-4.375-1.598-.256.022-.447.247-.427.504.023.253.248.448.503.427 1.262-.11 2.607.293 3.523 1.287.918.995 1.257 2.349 1.064 3.601-.038.254.135.491.387.533.252.038.49-.134.531-.387.24-1.561-.175-3.132-1.206-4.367z" />
+                  </svg>
+                </button>
+
+                {/* Twitter/X */}
+                <button
+                  onClick={() => shareToTwitter(publishedUrl, articleTitle)}
+                  className="w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center hover:bg-gray-800 transition-colors shadow-md"
+                  title="Twitter/X"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                </button>
+
+                {/* Facebook */}
+                <button
+                  onClick={() => shareToFacebook(publishedUrl)}
+                  className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-700 transition-colors shadow-md"
+                  title="Facebook"
+                >
+                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
             <div className="flex gap-3">
               <button
-                onClick={() => {
-                  setOtpSent(false);
-                  setLoginOtp('');
-                  setLoginError('');
-                }}
-                className="px-4 py-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors"
+                onClick={() => copyToClipboard(publishedUrl)}
+                className="flex-1 bg-emerald-500 text-white font-medium py-2 px-4 rounded-xl hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2"
               >
-                返回
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                复制链接
               </button>
               <button
-                onClick={verifyOtp}
-                className="flex-1 bg-emerald-500 text-white font-medium py-3 px-4 rounded-xl hover:bg-emerald-600 transition-colors"
+                onClick={() => window.open(publishedUrl, '_blank')}
+                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors"
               >
-                验证登录
+                预览
+              </button>
+              <button
+                onClick={() => setShowPublishModal(false)}
+                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors"
+              >
+                关闭
               </button>
             </div>
-          </>
-        )}
-      </div>
-    </div>
-  )}
+          </div>
+        </div>
+      )}
 
-  {/* CSS Globals for component-specific styling */ }
-  <style>{`
+      {/* Template Preview Modal */}
+      {previewTemplate && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-3 border-b border-slate-100 flex justify-between items-center">
+              <span className="text-sm font-medium text-slate-700">{previewTemplate.templateName}</span>
+              <button
+                onClick={() => setPreviewTemplate(null)}
+                className="p-1 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X className="w-4 h-4 text-slate-400" />
+              </button>
+            </div>
+
+            {/* Layout Preview - Phone mockup */}
+            <div className="p-4 bg-slate-100">
+              <div
+                className="w-full aspect-[9/16] rounded-xl overflow-hidden shadow-lg"
+                style={{ backgroundColor: previewTemplate.styleAnalysis?.secondaryColor || '#f8fafc' }}
+              >
+                {/* Cover Section */}
+                <div
+                  className="h-1/3 p-3 flex flex-col justify-end"
+                  style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor || '#1e40af' }}
+                >
+                  <div className="w-2/3 h-2 bg-white/80 rounded mb-1" />
+                  <div className="w-1/2 h-1.5 bg-white/50 rounded" />
+                </div>
+
+                {/* Content Section */}
+                <div className="p-3 space-y-2">
+                  {/* Image placeholder */}
+                  <div
+                    className="w-full h-12 rounded flex items-center justify-center"
+                    style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor + '20' || '#1e40af20' }}
+                  >
+                    <ImageIcon className="w-4 h-4" style={{ color: previewTemplate.styleAnalysis?.primaryColor || '#1e40af' }} />
+                  </div>
+
+                  {/* Text lines */}
+                  <div className="space-y-1">
+                    <div
+                      className="w-full h-1.5 rounded"
+                      style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor + '40' || '#1e40af40' }}
+                    />
+                    <div
+                      className="w-4/5 h-1.5 rounded"
+                      style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor + '30' || '#1e40af30' }}
+                    />
+                    <div
+                      className="w-3/5 h-1.5 rounded"
+                      style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor + '20' || '#1e40af20' }}
+                    />
+                  </div>
+
+                  {/* Another image */}
+                  <div
+                    className="w-full h-10 rounded flex items-center justify-center"
+                    style={{ backgroundColor: previewTemplate.styleAnalysis?.accentColor + '20' || '#f59e0b20' }}
+                  >
+                    <ImageIcon className="w-3 h-3" style={{ color: previewTemplate.styleAnalysis?.accentColor || '#f59e0b' }} />
+                  </div>
+
+                  {/* More text */}
+                  <div className="space-y-1">
+                    <div
+                      className="w-full h-1.5 rounded"
+                      style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor + '30' || '#1e40af30' }}
+                    />
+                    <div
+                      className="w-2/3 h-1.5 rounded"
+                      style={{ backgroundColor: previewTemplate.styleAnalysis?.primaryColor + '20' || '#1e40af20' }}
+                    />
+                  </div>
+
+                  {/* CTA Button */}
+                  <div
+                    className="w-full h-6 rounded"
+                    style={{ backgroundColor: previewTemplate.styleAnalysis?.accentColor || '#f59e0b' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-3 border-t border-slate-100 flex gap-2">
+              <button
+                onClick={() => {
+                  setActiveTemplate(previewTemplate);
+                  setPreviewTemplate(null);
+                  setActiveTab('chat');
+                  setMessages(prev => [...prev, { role: 'system', content: `已选择模板 "${previewTemplate.templateName}"` }]);
+                }}
+                className="flex-1 py-2 px-3 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors"
+              >
+                使用模板
+              </button>
+              <button
+                onClick={() => setPreviewTemplate(null)}
+                className="py-2 px-3 bg-slate-100 text-slate-600 rounded-lg text-sm hover:bg-slate-200 transition-colors"
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Login Modal */}
+      {showLogin && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <User className="w-5 h-5 text-emerald-500" />
+                登录
+              </h3>
+              <button
+                onClick={() => {
+                  setShowLogin(false);
+                  setLoginEmail('');
+                  setLoginOtp('');
+                  setOtpSent(false);
+                  setLoginError('');
+                }}
+                className="p-1 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+
+            {!otpSent ? (
+              <>
+                <p className="text-slate-600 mb-4">请输入您的邮箱地址，我们将发送验证码：</p>
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-emerald-500 transition-colors mb-4"
+                  onKeyDown={(e) => e.key === 'Enter' && sendOtp()}
+                />
+                {loginError && <p className="text-red-500 text-sm mb-4">{loginError}</p>}
+                <button
+                  onClick={sendOtp}
+                  className="w-full bg-emerald-500 text-white font-medium py-3 px-4 rounded-xl hover:bg-emerald-600 transition-colors"
+                >
+                  发送验证码
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-slate-600 mb-4">验证码已发送至 <strong>{loginEmail}</strong></p>
+                <input
+                  type="text"
+                  value={loginOtp}
+                  onChange={(e) => setLoginOtp(e.target.value)}
+                  placeholder="输入6位验证码"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-emerald-500 transition-colors mb-4 text-center text-lg tracking-widest"
+                  maxLength={6}
+                  onKeyDown={(e) => e.key === 'Enter' && verifyOtp()}
+                />
+                {loginError && <p className="text-red-500 text-sm mb-4">{loginError}</p>}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setOtpSent(false);
+                      setLoginOtp('');
+                      setLoginError('');
+                    }}
+                    className="px-4 py-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors"
+                  >
+                    返回
+                  </button>
+                  <button
+                    onClick={verifyOtp}
+                    className="flex-1 bg-emerald-500 text-white font-medium py-3 px-4 rounded-xl hover:bg-emerald-600 transition-colors"
+                  >
+                    验证登录
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* CSS Globals for component-specific styling */}
+      <style>{`
   .scrollbar-hide::-webkit-scrollbar {
       display: none;
   }
@@ -1810,6 +1829,6 @@ export default function H5Generator() {
     animation: fade-in-up 0.8s ease-out forwards;
   }
 `}</style>
-</div >
-);
+    </div >
+  );
 }
