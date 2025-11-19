@@ -572,26 +572,39 @@ export default function H5Generator() {
       setIsLoading(true);
       setMessages(prev => [...prev, { role: 'system', content: `正在获取网页内容: ${templateUrl}...` }]);
 
-      // Use local proxy to fetch URL (bypasses CORS)
-      const proxyUrl = `/api/fetch-url?url=${encodeURIComponent(templateUrl)}`;
-      const response = await fetch(proxyUrl);
+      // Fetch URL directly from client-side (bypasses server timeout issues)
+      let htmlContent;
+      try {
+        const response = await fetch(templateUrl, {
+          mode: 'cors',
+          headers: {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          }
+        });
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData || '获取失败');
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        htmlContent = await response.text();
+
+        if (!htmlContent || htmlContent.length < 100) {
+          throw new Error('获取的内容为空或太短');
+        }
+      } catch (fetchError) {
+        // If direct fetch fails (CORS), provide helpful error message
+        if (fetchError.message.includes('CORS') || fetchError.name === 'TypeError') {
+          throw new Error('无法直接访问该网页（CORS限制）。\n\n解决方案：\n1. 在浏览器中打开该网页\n2. 右键 → "另存为" → 保存为 .html 文件\n3. 使用下方的"上传 HTML 文件分析"按钮上传');
+        }
+        throw fetchError;
       }
 
-      const text = await response.text();
-
-      if (!text) {
-        throw new Error('获取内容为空');
-      }
-
-      await analyzeWebpageAsTemplate(templateUrl, text);
+      // Send the fetched content to server for AI analysis
+      await analyzeWebpageAsTemplate(templateUrl, htmlContent);
       setTemplateUrl('');
     } catch (error) {
       console.error("URL Analysis Error:", error);
-      setMessages(prev => [...prev, { role: 'error', content: `无法获取网页内容。错误: ${error.message}` }]);
+      setMessages(prev => [...prev, { role: 'error', content: `无法分析网页。错误: ${error.message}` }]);
     } finally {
       setIsLoading(false);
     }
@@ -1457,10 +1470,10 @@ export default function H5Generator() {
               }}
               disabled={isPublishing || slides.length === 0 || isPublished}
               className={`p-3 rounded-full shadow-lg transition-colors cursor-pointer ${isPublished
-                  ? 'bg-green-500 text-white'
-                  : isPublishing || slides.length === 0
-                    ? 'bg-slate-400 text-slate-200 cursor-not-allowed'
-                    : 'bg-emerald-600 text-white hover:bg-emerald-500 active:scale-95'
+                ? 'bg-green-500 text-white'
+                : isPublishing || slides.length === 0
+                  ? 'bg-slate-400 text-slate-200 cursor-not-allowed'
+                  : 'bg-emerald-600 text-white hover:bg-emerald-500 active:scale-95'
                 }`}
               title={isPublished ? '已发布' : '发布文章'}
             >
@@ -1478,8 +1491,8 @@ export default function H5Generator() {
               onClick={openShareModal}
               disabled={!isPublished}
               className={`p-3 rounded-full shadow-lg transition-colors ${isPublished
-                  ? 'bg-blue-600 text-white hover:bg-blue-500'
-                  : 'bg-slate-400 text-slate-200 cursor-not-allowed'
+                ? 'bg-blue-600 text-white hover:bg-blue-500'
+                : 'bg-slate-400 text-slate-200 cursor-not-allowed'
                 }`}
               title={isPublished ? '分享文章' : '请先发布'}
             >
